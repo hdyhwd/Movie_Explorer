@@ -359,4 +359,68 @@ class ApiService {
       throw Exception('Terjadi kesalahan umum saat memuat film favorit.');
     }
   }
+
+  // --- 10. GET PRIMARY RELEASE DATE (Menggunakan endpoint /release_dates) ---
+  // Fungsi baru ini mengambil data rilis detail dan mencari TANGGAL rilis teater pertama (YYYY-MM-DD).
+  Future<String> getMoviePrimaryReleaseDate(int movieId) async {
+    try {
+      final response = await _dio.get(
+        '/movie/$movieId/release_dates',
+        queryParameters: {'api_key': ApiConstants.apiKey},
+      );
+
+      // Kita tidak memerlukan model MovieReleaseDates yang kompleks di sini,
+      // cukup parsing JSON untuk menemukan tanggal tercepat.
+      final results = (response.data['results'] as List<dynamic>?) ?? [];
+
+      DateTime? earliestTheaterDateTime;
+      String primaryReleaseDateString = 'TBA';
+
+      for (var result in results) {
+        final dates = (result['release_dates'] as List<dynamic>?) ?? [];
+
+        for (var dateItem in dates) {
+          final releaseDateStringWithTime = dateItem['release_date'] as String?;
+          final type = dateItem['type'] as int?; // 3 = Theatrical
+
+          if (releaseDateStringWithTime != null &&
+              releaseDateStringWithTime.isNotEmpty &&
+              type == 3) {
+            final currentDateTime = DateTime.tryParse(
+              releaseDateStringWithTime,
+            );
+
+            if (currentDateTime != null) {
+              // Cek apakah ini rilis teater yang paling awal
+              if (earliestTheaterDateTime == null ||
+                  currentDateTime.isBefore(earliestTheaterDateTime)) {
+                earliestTheaterDateTime = currentDateTime;
+
+                // Ambil string tanggal rilis (YYYY-MM-DD) dan potong bagian waktu (T00:00:00.000Z)
+                primaryReleaseDateString = releaseDateStringWithTime.split(
+                  'T',
+                )[0];
+              }
+            }
+          }
+        }
+      }
+
+      // Jika tidak ditemukan rilis teater (type: 3), fallback ke tanggal rilis yang paling awal ditemukan (type apapun)
+      if (primaryReleaseDateString == 'TBA' &&
+          earliestTheaterDateTime != null) {
+        primaryReleaseDateString = earliestTheaterDateTime
+            .toIso8601String()
+            .split('T')[0];
+      }
+
+      return primaryReleaseDateString; // Mengembalikan string YYYY-MM-DD
+    } on DioException catch (e) {
+      print('Error fetching movie release dates: ${e.message}');
+      return 'N/A';
+    } catch (e) {
+      print('An unexpected error occurred: $e');
+      return 'N/A';
+    }
+  }
 }

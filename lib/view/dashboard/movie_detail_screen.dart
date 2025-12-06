@@ -2,13 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:intl/intl.dart';
+
+// Asumsi import model, constants, dan helper Anda
 import '../../services/api_service.dart';
 import '../../models/movie_model.dart';
 import '../../constants/api_constants.dart';
 import '../../constants/app_colors.dart';
 import '../../utils/preferences_helper.dart';
-import 'package:intl/intl.dart';
 
+// --- MovieDetailScreen Class ---
 class MovieDetailScreen extends StatefulWidget {
   final int movieId;
   const MovieDetailScreen({super.key, required this.movieId});
@@ -21,6 +24,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   Future<Movie?>? _movieDetailFuture;
   Future<List<Review>>? _reviewsFuture;
   Future<List<MovieVideo>>? _videosFuture;
+
   bool _isFavorite = false;
   YoutubePlayerController? _youtubeController;
 
@@ -37,13 +41,28 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
       ) {
         if (movie != null) {
           _isFavorite = movie.isFavorite;
-          print('Movie Overview: ${movie.overview}');
         }
         return movie;
       });
       _reviewsFuture = ApiService().getMovieReviews(widget.movieId);
       _videosFuture = ApiService().getMovieVideos(widget.movieId);
     });
+  }
+
+  // Helper untuk memformat tanggal YYYY-MM-DD ke DD MMM YYYY
+  String _formatReleaseDate(String dateString) {
+    if (dateString == 'TBA' ||
+        dateString == 'N/A' ||
+        dateString.isEmpty ||
+        dateString == '0000-00-00') {
+      return 'N/A';
+    }
+    try {
+      final dateTime = DateTime.parse(dateString);
+      return DateFormat('dd MMM yyyy').format(dateTime);
+    } catch (e) {
+      return dateString.split('-')[0];
+    }
   }
 
   // Initialize YouTube Player
@@ -225,6 +244,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
           }
 
           final Movie movie = snapshot.data!;
+          final fullReleaseDate = _formatReleaseDate(movie.releaseDate);
+
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +302,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
                 // Content Section
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  // ✅ KOREKSI 1: Hanya padding horizontal
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -300,6 +322,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                       // Rating & Release Date
                       Row(
                         children: [
+                          // Rating
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -329,6 +352,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
+
+                          // TANGGAL RILIS LENGKAP
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -351,7 +376,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  movie.releaseDate.split('-')[0],
+                                  fullReleaseDate,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: AppColors.textLight,
@@ -423,9 +448,11 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                         builder: (context, snapshot) {
                           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                             final videos = snapshot.data!;
-                            final mainVideo = videos.first;
+                            final mainVideo = videos.firstWhere(
+                              (v) => v.type == 'Trailer',
+                              orElse: () => videos.first,
+                            );
 
-                            // Initialize YouTube player
                             if (_youtubeController == null) {
                               _initializeYoutubePlayer(mainVideo.key);
                             }
@@ -518,11 +545,15 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        // ✅ KOREKSI 2: Jarak setelah Cast Section
+                        const SizedBox(height: 16),
                       ],
 
                       // Reviews Section
                       MovieReviewsSection(reviewsFuture: _reviewsFuture!),
+
+                      // ✅ KOREKSI 3: Menambahkan padding bawah sebagai penutup konten
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -535,7 +566,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   }
 }
 
-// Widget Cast Card
+// Widget Cast Card (Tidak diubah)
 class CastCard extends StatelessWidget {
   final Cast cast;
   const CastCard({super.key, required this.cast});
@@ -737,151 +768,172 @@ class MovieReviewsSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
 
-        FutureBuilder<List<Review>>(
-          future: reviewsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: CircularProgressIndicator(
-                    color: AppColors.primary,
-                    strokeWidth: 3,
-                  ),
-                ),
-              );
-            } else if (snapshot.hasError) {
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Gagal memuat ulasan: ${snapshot.error}',
-                  style: const TextStyle(color: AppColors.error),
-                ),
-              );
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Belum ada ulasan untuk film ini.',
-                  style: TextStyle(color: AppColors.textGray),
-                ),
-              );
-            }
+        // ✅ KOREKSI 4: Menggunakan Transform.translate untuk menggeser FutureBuilder ke atas
+        // Offset Y negatif (-12.0) akan menarik konten ulasan ke atas sejajar dengan judul
+        Transform.translate(
+          offset: const Offset(0.0, -70.0),
+          child: Padding(
+            // Padding Top 12.0 dipertahankan, namun pergeseran -12.0 membuatnya efektif menjadi 0.
+            // Anda bisa menyesuaikan nilai Offset dan Padding ini untuk kontrol jarak yang sempurna.
+            padding: const EdgeInsets.only(top: 1),
+            child: FutureBuilder<List<Review>>(
+              future: reviewsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // ✅ KOREKSI 5: SizedBox minimalis untuk loading agar tidak menambah jarak vertikal
+                  return Center(
+                    child: SizedBox(
+                      height: 48,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                          strokeWidth: 3,
+                        ),
+                      ),
+                    ),
+                  );
+                } else if (snapshot.hasError) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Gagal memuat ulasan: ${snapshot.error}',
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Belum ada ulasan untuk film ini.',
+                      style: TextStyle(color: AppColors.textGray),
+                    ),
+                  );
+                }
 
-            final List<Review> reviews = snapshot.data!;
+                final List<Review> reviews = snapshot.data!;
 
-            return ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: reviews.length > 5 ? 5 : reviews.length,
-              itemBuilder: (context, index) {
-                final review = reviews[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.surfaceColor, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                return ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: reviews.length > 5 ? 5 : reviews.length,
+                  itemBuilder: (context, index) {
+                    final review = reviews[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.surfaceColor,
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              review.author,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: AppColors.textLight,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  review.author,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: AppColors.textLight,
+                                  ),
+                                ),
                               ),
+                              if (review.rating != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: AppColors.primaryGradient,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        color: AppColors.textLight,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        review.rating!.toStringAsFixed(1),
+                                        style: const TextStyle(
+                                          color: AppColors.textLight,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _formatDate(review.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textGray,
                             ),
                           ),
-                          if (review.rating != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    color: AppColors.textLight,
-                                    size: 14,
+                          const SizedBox(height: 12),
+                          Text(
+                            review.content,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textLight,
+                              height: 1.5,
+                            ),
+                          ),
+                          if (review.content.length > 200)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: InkWell(
+                                onTap: () {
+                                  _showFullReview(context, review);
+                                },
+                                child: const Text(
+                                  'Baca Selengkapnya...',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    review.rating!.toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      color: AppColors.textLight,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatDate(review.createdAt),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textGray,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        review.content,
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textLight,
-                          height: 1.5,
-                        ),
-                      ),
-                      if (review.content.length > 200)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: InkWell(
-                            onTap: () {
-                              _showFullReview(context, review);
-                            },
-                            child: const Text(
-                              'Baca Selengkapnya...',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    );
+                  },
                 );
               },
-            );
-          },
+            ),
+          ),
         ),
       ],
     );

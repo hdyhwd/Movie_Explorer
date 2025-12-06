@@ -3,23 +3,23 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesHelper {
-  static const String _isLoggedInKey = 'isLoggedIn';
-  // Key untuk menyimpan daftar ID film favorit
+  // static const String _isLoggedInKey = 'isLoggedIn';
+  // // Key untuk menyimpan daftar ID film favorit
   static const String _favoriteMoviesKey = 'favoriteMovieIds';
 
-  // Menyimpan status login
-  static Future<void> setLoggedIn(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isLoggedInKey, value);
-  }
+  // // Menyimpan status login
+  // static Future<void> setLoggedIn(bool value) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setBool(_isLoggedInKey, value);
+  // }
 
-  // Mendapatkan status login
-  static Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_isLoggedInKey) ?? false;
-  }
+  // // Mendapatkan status login
+  // static Future<bool> isLoggedIn() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   return prefs.getBool(_isLoggedInKey) ?? false;
+  // }
 
-  // Mendapatkan daftar ID film favorit
+  // // Mendapatkan daftar ID film favorit
   static Future<List<int>> getFavoriteMovieIds() async {
     final prefs = await SharedPreferences.getInstance();
     // SharedPreferences hanya bisa menyimpan String List, jadi kita konversi ke Int

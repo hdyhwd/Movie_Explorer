@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/api_service.dart';
-import '../../services/auth_service.dart';
 import '../../constants/app_colors.dart';
 import '../auth/login_screen.dart';
 import 'all_movies_screen.dart';
@@ -18,63 +17,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // Index tab yang aktif
-
-  void _logout(BuildContext context) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Logout',
-          style: TextStyle(
-            color: AppColors.textLight,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Text(
-          'Apakah Anda yakin ingin keluar?',
-          style: TextStyle(color: AppColors.textGray),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
-              'Batal',
-              style: TextStyle(color: AppColors.textGray),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
-                'Logout',
-                style: TextStyle(
-                  color: AppColors.textLight,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await AuthService().logout();
-      if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (Route<dynamic> route) => false,
-        );
-      }
-    }
-  }
 
   final List<Widget> _widgetOptions = <Widget>[
     const DashboardContent(),
@@ -132,15 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.surfaceColor, width: 1),
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.logout_rounded,
-                color: AppColors.primary,
-                size: 22,
-              ),
-              tooltip: 'Logout',
-              onPressed: () => _logout(context),
             ),
           ),
         ],

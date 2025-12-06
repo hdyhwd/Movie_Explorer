@@ -43,7 +43,7 @@ class Movie {
       title: json['title'] as String? ?? 'Unknown Title',
       overview: json['overview'] as String? ?? '',
       posterPath: json['poster_path'] as String? ?? '',
-      releaseDate: json['release_date'] as String? ?? 'N/A',
+      releaseDate: json['release_date'] as String? ?? '0000-00-00',
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
       cast: const [],
       genreIds: genreIdsList, // ✅ TAMBAHAN: Set genre IDs
@@ -76,7 +76,7 @@ class Movie {
       title: json['title'] as String? ?? 'Unknown Title',
       overview: json['overview'] as String? ?? '',
       posterPath: json['poster_path'] as String? ?? '',
-      releaseDate: json['release_date'] as String? ?? 'N/A',
+      releaseDate: json['release_date'] as String? ?? '0000-00-00',
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
       cast: castList,
       genreIds: genreIdsList, // ✅ TAMBAHAN: Set genre IDs
