@@ -38,8 +38,16 @@ class _MovieCardState extends State<MovieCard> {
             isAdding
                 ? '${widget.movie.title} ditambahkan ke favorit.'
                 : '${widget.movie.title} dihapus dari favorit.',
+            style: const TextStyle(
+              color: AppColors.textLight,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          backgroundColor: AppColors.secondary,
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -83,16 +91,24 @@ class _MovieCardState extends State<MovieCard> {
             });
       },
       child: Container(
-        width: 150,
+        width: 160, // Ukuran yang lebih proporsional
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: AppColors.textLight,
-          borderRadius: BorderRadius.circular(10),
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.surfaceColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
+              color: AppColors.primary.withOpacity(0.15),
+              spreadRadius: 0,
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              spreadRadius: 0,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -101,57 +117,125 @@ class _MovieCardState extends State<MovieCard> {
           children: [
             // Gambar Poster Film
             Expanded(
-              flex: 5,
+              flex: 7, // Proporsi poster lebih besar
               child: Stack(
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(10),
+                      top: Radius.circular(16),
                     ),
                     child: widget.movie.posterPath.isNotEmpty
-                        ? Image.network(
-                            '${ApiConstants.baseImageUrl}${widget.movie.posterPath}',
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  value:
-                                      loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                      : null,
-                                  color: AppColors.secondary,
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 40,
-                                    color: Colors.red,
+                        ? Stack(
+                            children: [
+                              Image.network(
+                                '${ApiConstants.baseImageUrl}${widget.movie.posterPath}',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                          color: AppColors.primary,
+                                          strokeWidth: 3,
+                                        ),
+                                      );
+                                    },
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                      color: AppColors.surfaceColor,
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.broken_image_rounded,
+                                          size: 50,
+                                          color: AppColors.textGray,
+                                        ),
+                                      ),
+                                    ),
+                              ),
+                              // Gradient overlay at bottom
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  height: 40, // Gradient lebih tipis
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        AppColors.cardBackground,
+                                        AppColors.cardBackground.withOpacity(
+                                          0.8,
+                                        ),
+                                        Colors.transparent,
+                                      ],
+                                    ),
                                   ),
                                 ),
+                              ),
+                            ],
                           )
-                        : const Center(child: Text('No Image Available')),
+                        : Container(
+                            color: AppColors.surfaceColor,
+                            child: const Center(
+                              child: Text(
+                                'No Image',
+                                style: TextStyle(color: AppColors.textGray),
+                              ),
+                            ),
+                          ),
                   ),
-                  // Tombol Favorit di pojok kanan atas
+                  // Rating badge di pojok kiri atas
                   Positioned(
-                    top: 5,
-                    right: 5,
-                    child: IconButton(
-                      icon: Icon(
-                        _isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: _isFavorite ? Colors.red : AppColors.textLight,
-                        shadows: [
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.7),
-                            blurRadius: 4,
+                            color: AppColors.primary.withOpacity(0.4),
+                            blurRadius: 6,
+                            spreadRadius: 1,
                           ),
                         ],
                       ),
-                      onPressed: _toggleFavorite,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: AppColors.textLight,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.movie.voteAverage.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: AppColors.textLight,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -159,47 +243,136 @@ class _MovieCardState extends State<MovieCard> {
             ),
 
             // Detail Teks Film
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.movie.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppColors.primary,
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 10.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Judul Film
+                  Text(
+                    widget.movie.title,
+                    maxLines: 2, // 2 baris untuk judul panjang
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppColors.textLight,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+
+                  // ✅ Genre Tags
+                  Builder(
+                    builder: (context) {
+                      final genreNames = widget.movie.getGenreNames(
+                        GenreHelper.genreMap,
+                      );
+
+                      // Debug: Print untuk cek data
+                      print('Movie: ${widget.movie.title}');
+                      print('Genre IDs: ${widget.movie.genreIds}');
+                      print('Genre Names: $genreNames');
+
+                      if (genreNames.isEmpty) {
+                        return const SizedBox(height: 8);
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: genreNames.map((genreName) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: AppColors.primary.withOpacity(0.4),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                genreName,
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Year & Favorite Button Row
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceColor,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          widget.movie.releaseDate.split('-')[0],
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          widget.movie.voteAverage.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                      const Spacer(),
+                      // Tombol Favorit
+                      GestureDetector(
+                        onTap: _toggleFavorite,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: _isFavorite
+                                ? AppColors.error.withOpacity(0.15)
+                                : AppColors.surfaceColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _isFavorite
+                                  ? AppColors.error
+                                  : AppColors.textGray.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Icon(
+                            _isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            color: _isFavorite
+                                ? AppColors.error
+                                : AppColors.textGray,
+                            size: 20,
                           ),
                         ),
-                        const Spacer(),
-                        Text(
-                          '(${widget.movie.releaseDate.split('-')[0]})',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -226,36 +399,128 @@ class MovieCategorySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16.0, top: 16.0, bottom: 8.0),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
+          padding: const EdgeInsets.only(left: 24.0, top: 8.0, bottom: 12.0),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textLight,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
         ),
 
         SizedBox(
-          height: 320, // Ketinggian untuk list horizontal
+          height: 330, // Tinggi ditambah sedikit untuk genre tags
           child: FutureBuilder<List<Movie>>(
             future: future,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.secondary),
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: AppColors.primary,
+                        strokeWidth: 3,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Memuat film...',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               } else if (snapshot.hasError) {
                 return Center(
-                  child: Text(
-                    'Gagal memuat kategori $title: ${snapshot.error}',
-                    textAlign: TextAlign.center,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.error.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          color: AppColors.error,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Gagal memuat kategori $title',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.textLight,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textGray,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return Center(
-                  child: Text('Tidak ada film di kategori $title.'),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.movie_outlined,
+                          color: AppColors.textGray,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tidak ada film di kategori $title',
+                          style: TextStyle(
+                            color: AppColors.textGray,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               }
 
@@ -263,13 +528,14 @@ class MovieCategorySection extends StatelessWidget {
 
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: movies.length,
                 itemBuilder: (context, index) {
                   final movie = movies[index];
                   return Padding(
                     padding: EdgeInsets.only(
-                      left: index == 0 ? 16 : 0,
-                      right: 10,
+                      left: index == 0 ? 8 : 0,
+                      right: 12,
                     ),
                     // Menggunakan MovieCard yang baru
                     child: MovieCard(movie: movie),

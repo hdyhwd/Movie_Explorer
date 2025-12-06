@@ -9,21 +9,13 @@ class ApiService {
   // Inisialisasi Dio dengan Base URL dari constants
   final Dio _dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
 
-  // Helper untuk menambahkan status favorit ke list film yang diterima dari API
+  // ✅ FIXED: Helper untuk menambahkan status favorit TANPA menghilangkan data lain
   Future<List<Movie>> _applyFavoriteStatus(List<Movie> movies) async {
     final favoriteIds = await PreferencesHelper.getFavoriteMovieIds();
     return movies.map((movie) {
-      // Membuat salinan Movie dengan status favorit yang diperbarui
-      return Movie(
-        id: movie.id,
-        title: movie.title,
-        overview: movie.overview,
-        posterPath: movie.posterPath,
-        releaseDate: movie.releaseDate,
-        voteAverage: movie.voteAverage,
-        cast: movie.cast,
-        isFavorite: favoriteIds.contains(movie.id),
-      );
+      // Update isFavorite saja, jangan buat Movie baru
+      movie.isFavorite = favoriteIds.contains(movie.id);
+      return movie;
     }).toList();
   }
 
@@ -44,6 +36,13 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final List<dynamic> results = response.data['results'];
+
+        // Debug print
+        if (results.isNotEmpty) {
+          print('=== POPULAR MOVIES DEBUG ===');
+          print('First movie genre_ids: ${results[0]['genre_ids']}');
+        }
+
         final movies = results.map((json) => Movie.fromJson(json)).toList();
 
         // Tambahkan status favorit
@@ -72,10 +71,7 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/trending/movie/week',
-        queryParameters: {
-          'api_key': ApiConstants.apiKey, // Menggunakan V3 Key
-          'language': 'en-US',
-        },
+        queryParameters: {'api_key': ApiConstants.apiKey, 'language': 'en-US'},
       );
 
       if (response.statusCode == 200) {
@@ -132,7 +128,7 @@ class ApiService {
         '/discover/movie',
         queryParameters: {
           'api_key': ApiConstants.apiKey,
-          'with_genres': genreId, // Filter berdasarkan ID Genre
+          'with_genres': genreId,
           'sort_by': 'popularity.desc',
           'language': 'en-US',
           'page': 1,
@@ -164,10 +160,47 @@ class ApiService {
     }
   }
 
-  // --- 5. SEARCH MOVIES (Fitur ini di-skip) ---
+  // --- 5. SEARCH MOVIES ---
   Future<List<Movie>> searchMovies(String query) async {
-    // Fungsi ini dikosongkan karena fitur pencarian di-skip
-    return [];
+    if (query.trim().isEmpty) {
+      return [];
+    }
+
+    try {
+      final response = await _dio.get(
+        '/search/movie',
+        queryParameters: {
+          'api_key': ApiConstants.apiKey,
+          'query': query,
+          'language': 'en-US',
+          'page': 1,
+          'include_adult': false,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> results = response.data['results'] ?? [];
+        final movies = results.map((json) => Movie.fromJson(json)).toList();
+
+        // Tambahkan status favorit
+        return await _applyFavoriteStatus(movies);
+      }
+
+      throw Exception(
+        'Gagal mencari film. Status Code: ${response.statusCode}',
+      );
+    } on DioException catch (e) {
+      String errorMessage = 'Koneksi gagal atau API bermasalah (Search).';
+      if (e.response?.statusCode != null) {
+        errorMessage =
+            'API Error ${e.response!.statusCode}: ${e.response!.statusMessage ?? e.message} (Search)';
+      }
+      print('Dio Error searching movies: $errorMessage');
+      throw Exception(errorMessage);
+    } catch (e) {
+      print('Error searching movies (General): $e');
+      throw Exception('Terjadi kesalahan umum saat mencari film.');
+    }
   }
 
   // --- 6. GET MOVIE CREDITS (PEMAIN) ---
@@ -218,15 +251,51 @@ class ApiService {
     }
   }
 
+  // --- 7.5. GET MOVIE VIDEOS (TRAILERS) --- ✅ BARU
+  Future<List<MovieVideo>> getMovieVideos(int movieId) async {
+    try {
+      final response = await _dio.get(
+        '/movie/$movieId/videos',
+        queryParameters: {'api_key': ApiConstants.apiKey, 'language': 'en-US'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> videosJson = response.data['results'] ?? [];
+        final videos = videosJson
+            .map((json) => MovieVideo.fromJson(json))
+            .toList();
+
+        // Filter hanya YouTube videos dan sort by official & trailer first
+        final youtubeVideos = videos.where((v) => v.isYouTube).toList();
+        youtubeVideos.sort((a, b) {
+          // Official trailer first
+          if (a.official && !b.official) return -1;
+          if (!a.official && b.official) return 1;
+          // Then trailer type
+          if (a.isTrailer && !b.isTrailer) return -1;
+          if (!a.isTrailer && b.isTrailer) return 1;
+          return 0;
+        });
+
+        return youtubeVideos;
+      }
+      return [];
+    } on DioException catch (e) {
+      print('Dio Error fetching movie videos: ${e.message}');
+      return [];
+    } catch (e) {
+      print('Error fetching movie videos: $e');
+      return [];
+    }
+  }
+
   // --- 8. GET MOVIE DETAIL (DIKOMBINASI DENGAN CREDITS) ---
   Future<Movie?> getMovieDetail(int movieId) async {
     try {
-      // Dapatkan status favorit sebelum request
       final isFavorite = await PreferencesHelper.getFavoriteMovieIds().then(
         (ids) => ids.contains(movieId),
       );
 
-      // Lakukan request detail film dan credits secara paralel
       final responses = await Future.wait([
         _dio.get(
           '/movie/$movieId',
@@ -235,14 +304,13 @@ class ApiService {
             'language': 'en-US',
           },
         ),
-        getMovieCredits(movieId), // Panggil fungsi credits
+        getMovieCredits(movieId),
       ]);
 
       final detailResponse = responses[0] as Response;
       final castList = responses[1] as List<Cast>;
 
       if (detailResponse.statusCode == 200) {
-        // Gabungkan data detail film, daftar pemain, dan status favorit
         return Movie.fromDetailJson(
           detailResponse.data,
           castList,
@@ -261,7 +329,6 @@ class ApiService {
     final favoriteIds = await PreferencesHelper.getFavoriteMovieIds();
     if (favoriteIds.isEmpty) return [];
 
-    // Mengambil detail untuk setiap ID film favorit
     final futures = favoriteIds
         .map(
           (id) => _dio.get(
@@ -280,7 +347,6 @@ class ApiService {
 
       for (var response in responses) {
         if (response.statusCode == 200) {
-          // Buat objek Movie dan set isFavorite ke true
           favoriteMovies.add(Movie.fromJson(response.data, isFavorite: true));
         }
       }

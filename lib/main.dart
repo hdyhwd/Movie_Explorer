@@ -1,11 +1,11 @@
-// Titik masuk utama aplikasi, menangani tema dan penentuan rute awal (Login/Dashboard).
+// Titik masuk utama aplikasi, menangani tema dan penentuan rute awal.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'constants/app_colors.dart';
-import 'view/auth/login_screen.dart';
-import 'view/dashboard/dashboard_screen.dart'; // Import HomeScreen yang baru
-import 'services/auth_service.dart';
+// import 'view/auth/login_screen.dart'; // DIHAPUS
+import 'view/dashboard/dashboard_screen.dart'; // Import HomeScreen
+// import 'services/auth_service.dart'; // DIHAPUS
 
 void main() {
   // Wajib dipanggil sebelum menggunakan SharedPreferences
@@ -38,23 +38,8 @@ class MovieExplorerApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.background,
         useMaterial3: true,
       ),
-      // FutureBuilder untuk menentukan halaman awal berdasarkan status login
-      home: FutureBuilder<bool>(
-        future: AuthService().checkLoginStatus(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // Tampilkan loading screen saat menunggu status auth
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(color: AppColors.secondary),
-              ),
-            );
-          }
-          final bool isLoggedIn = snapshot.data ?? false;
-          // Jika sudah login, langsung ke HomeScreen (kontainer tab)
-          return isLoggedIn ? const HomeScreen() : const LoginScreen();
-        },
-      ),
+      // NEW: Langsung tampilkan HomeScreen tanpa pemeriksaan autentikasi
+      home: const HomeScreen(),
     );
   }
 }

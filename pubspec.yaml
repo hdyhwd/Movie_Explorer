@@ -35,6 +35,7 @@ dependencies:
   intl: ^0.18.1
   # icons
   cupertino_icons: ^1.0.6
+  youtube_player_flutter: ^9.0.3
 
 dev_dependencies:
   flutter_test:

@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _login() async {
     setState(() {
@@ -42,9 +43,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
+          SnackBar(
+            content: const Text(
               'Login Gagal. Cek username dan password (min 4 karakter).',
+              style: TextStyle(color: AppColors.textLight),
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
         );
@@ -58,108 +65,256 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Movie Explorer Login',
-          style: TextStyle(color: AppColors.textLight),
+          'Movie Explorer',
+          style: TextStyle(
+            color: AppColors.textLight,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        centerTitle: true,
         systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarBrightness: Brightness.dark,
+          statusBarColor: AppColors.background,
+          statusBarIconBrightness: Brightness.light,
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.movie_filter,
-                size: 80,
-                color: AppColors.secondary,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Selamat Datang Kembali!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  prefixIcon: const Icon(Icons.person),
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  prefixIcon: const Icon(Icons.lock),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 30),
-
-              _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.secondary,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo/Icon with gradient background
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 5,
                       ),
-                    )
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.movie_filter_rounded,
+                    size: 64,
+                    color: AppColors.textLight,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Welcome Text
+                const Text(
+                  'Selamat Datang',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textLight,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Masuk untuk melanjutkan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textGray,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 48),
+
+                // Username Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.surfaceColor, width: 1),
+                  ),
+                  child: TextField(
+                    controller: _usernameController,
+                    style: const TextStyle(color: AppColors.textLight),
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: TextStyle(color: AppColors.textGray),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(20),
+                      prefixIcon: const Icon(
+                        Icons.person_outline_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Password Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.surfaceColor, width: 1),
+                  ),
+                  child: TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: const TextStyle(color: AppColors.textLight),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: TextStyle(color: AppColors.textGray),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(20),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: AppColors.textGray,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Login Button
+                _isLoading
+                    ? Container(
+                        padding: const EdgeInsets.all(16),
+                        child: const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
                           ),
                         ),
-                        child: const Text(
-                          'LOGIN',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: AppColors.textDark,
-                            fontWeight: FontWeight.bold,
+                      )
+                    : Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
+                          child: const Text(
+                            'LOGIN',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: AppColors.textLight,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                const SizedBox(height: 24),
+
+                // Divider
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: AppColors.surfaceColor,
+                        thickness: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'atau',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 14,
                         ),
                       ),
                     ),
-
-              const SizedBox(height: 20),
-
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterScreen(),
+                    Expanded(
+                      child: Divider(
+                        color: AppColors.surfaceColor,
+                        thickness: 1,
+                      ),
                     ),
-                  );
-                },
-                child: const Text(
-                  'Belum punya akun? Register di sini',
-                  style: TextStyle(color: AppColors.primary),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                // Register Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Belum punya akun? ',
+                      style: TextStyle(color: AppColors.textGray, fontSize: 15),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Daftar Sekarang',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

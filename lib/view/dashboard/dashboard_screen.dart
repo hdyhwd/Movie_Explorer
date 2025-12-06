@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import '../../constants/app_colors.dart';
 import '../auth/login_screen.dart';
 import 'all_movies_screen.dart';
-import 'favorite_screen.dart'; // NEW: Import Favorite Screen
-import 'shared_widgets.dart'; // NEW: Import Shared Widgets
+import 'favorite_screen.dart';
+import 'shared_widgets.dart';
 
 // Mengubah DashboardScreen menjadi HomeScreen (container dengan Bottom Navigation Bar)
 class HomeScreen extends StatefulWidget {
@@ -19,19 +20,65 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // Index tab yang aktif
 
   void _logout(BuildContext context) async {
-    await AuthService().logout();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (Route<dynamic> route) => false,
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Logout',
+          style: TextStyle(
+            color: AppColors.textLight,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'Apakah Anda yakin ingin keluar?',
+          style: TextStyle(color: AppColors.textGray),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: AppColors.textGray),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: AppColors.textLight,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+
+    if (confirmed == true) {
+      await AuthService().logout();
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    }
   }
 
   final List<Widget> _widgetOptions = <Widget>[
-    // Tab 0: Beranda (Dashboard lama)
     const DashboardContent(),
-    // Tab 1: Semua Film dengan Filter Genre
     const AllMoviesScreen(),
-    // NEW: Tab 2: Favorit
     const FavoriteScreen(),
   ];
 
@@ -46,38 +93,135 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'Movie Explorer',
-          style: TextStyle(color: AppColors.textLight),
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: AppColors.background,
+          statusBarIconBrightness: Brightness.light,
         ),
-        backgroundColor: AppColors.primary,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.movie_filter_rounded,
+                color: AppColors.textLight,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Movie Explorer',
+              style: TextStyle(
+                color: AppColors.textLight,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.background,
+        elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.textLight),
-            tooltip: 'Logout',
-            onPressed: () => _logout(context),
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.surfaceColor, width: 1),
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.logout_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
+              tooltip: 'Logout',
+              onPressed: () => _logout(context),
+            ),
           ),
         ],
       ),
-      body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Semua Film',
+      body: _widgetOptions.elementAt(_selectedIndex),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(
+                  icon: Icons.home_rounded,
+                  label: 'Beranda',
+                  index: 0,
+                ),
+                _buildNavItem(
+                  icon: Icons.movie_rounded,
+                  label: 'Semua Film',
+                  index: 1,
+                ),
+                _buildNavItem(
+                  icon: Icons.favorite_rounded,
+                  label: 'Favorit',
+                  index: 2,
+                ),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            // NEW: Item Favorit
-            icon: Icon(Icons.favorite),
-            label: 'Favorit',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.secondary,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: AppColors.primary,
-        onTap: _onItemTapped,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () => _onItemTapped(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: isSelected ? AppColors.primaryGradient : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.textLight : AppColors.textGray,
+              size: 26,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.textLight : AppColors.textGray,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -93,19 +237,43 @@ class DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Section
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selamat Datang! 👋',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textLight,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Temukan film favorit Anda',
+                  style: TextStyle(fontSize: 16, color: AppColors.textGray),
+                ),
+              ],
+            ),
+          ),
+
           // Kategori 1: Film Populer
           MovieCategorySection(
-            title: 'Paling Populer',
+            title: '🔥 Paling Populer',
             future: ApiService().getPopularMovies(),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           // Kategori 2: Film Trending Minggu Ini
           MovieCategorySection(
-            title: 'Trending Minggu Ini',
+            title: '📈 Trending Minggu Ini',
             future: ApiService().getTrendingMovies(),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
         ],
       ),
     );
