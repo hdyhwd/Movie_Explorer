@@ -3,9 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'constants/app_colors.dart';
-import 'view/auth/login_screen.dart';
 import 'view/dashboard/dashboard_screen.dart'; // Import HomeScreen yang baru
-import 'services/auth_service.dart';
 
 void main() {
   // Wajib dipanggil sebelum menggunakan SharedPreferences

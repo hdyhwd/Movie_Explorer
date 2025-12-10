@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/api_service.dart';
 import '../../constants/app_colors.dart';
-import '../auth/login_screen.dart';
 import 'all_movies_screen.dart';
 import 'favorite_screen.dart';
 import 'shared_widgets.dart';

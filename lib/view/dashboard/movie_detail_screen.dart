@@ -768,20 +768,14 @@ class MovieReviewsSection extends StatelessWidget {
             ),
           ],
         ),
-
-        // ✅ KOREKSI 4: Menggunakan Transform.translate untuk menggeser FutureBuilder ke atas
-        // Offset Y negatif (-12.0) akan menarik konten ulasan ke atas sejajar dengan judul
         Transform.translate(
           offset: const Offset(0.0, -70.0),
           child: Padding(
-            // Padding Top 12.0 dipertahankan, namun pergeseran -12.0 membuatnya efektif menjadi 0.
-            // Anda bisa menyesuaikan nilai Offset dan Padding ini untuk kontrol jarak yang sempurna.
             padding: const EdgeInsets.only(top: 1),
             child: FutureBuilder<List<Review>>(
               future: reviewsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  // ✅ KOREKSI 5: SizedBox minimalis untuk loading agar tidak menambah jarak vertikal
                   return Center(
                     child: SizedBox(
                       height: 48,
