@@ -1,123 +1,73 @@
-📘 Movie Explorer — README
+<img width="373" height="789" alt="Screenshot 2025-12-11 113821" src="https://github.com/user-attachments/assets/473c9318-e44e-47bb-8c0d-8f84b9f0137d" /># 🎬 Movie Explorer
 
-1. Penjelasan Aplikasi
+A Flutter application that fetches real-time movie data from The Movie Database (TMDb) API. This project was developed as part of a mobile programming final project and demonstrates API integration, JSON parsing, simple state management, and asynchronous UI handling.
 
-Movie Explorer adalah aplikasi mobile berbasis Flutter yang menampilkan data film dari API The Movie Database (TMDb). Aplikasi ini dibuat untuk mempraktekkan penggunaan API publik, manajemen state sederhana, parsing JSON, dan pengelolaan UI asinkron.
+---
+
+## ✨ Penjelasan Aplikasi
+
+Movie Explorer adalah aplikasi mobile berbasis Flutter yang berfungsi untuk mengambil dan menampilkan data film dari API The Movie Database (TMDb) secara real-time. Aplikasi ini dibuat untuk memenuhi kebutuhan tugas akhir pemrograman mobile. Proyek ini mempraktikkan penggunaan API publik, parsing JSON, state management sederhana, dan penanganan UI berbasis asynchronous.
+
+### 🚀 Fitur Utama
 
 Pengguna dapat:
+* Melihat daftar film Populer dan Trending saat ini.
+* Menelusuri detail film lengkap (overview, cast, review, trailer).
+* Mencari film berdasarkan judul.
+* Memfilter film berdasarkan genre.
+* Menyimpan film ke daftar Favorit (menggunakan Shared Preferences).
 
-Melihat daftar film populer dan trending
+Aplikasi ini secara khusus menampilkan tiga kondisi UI penting: loading, sukses, dan error.
 
-Melihat detail film (overview, cast, review, trailer)
+---
 
-Mencari film berdasarkan judul
+## 🔑 Endpoint API (TMDb)
 
-Memfilter film berdasarkan genre
+Aplikasi ini memanfaatkan beberapa endpoint kunci dari TMDb API.
 
-Menambahkan film ke daftar favorit
-
-Aplikasi menampilkan tiga kondisi UI penting: loading, sukses, dan error.
-
-2. Daftar Endpoint API (TMDb)
-
-Aplikasi menggunakan beberapa endpoint publik dari TMDb. Berikut daftar lengkapnya:
-
-Kategori
-
-Endpoint
-
-Fungsi
-
-Populer
-
-/discover/movie?sort_by=popularity.desc
-
-Menampilkan film populer
-
-Trending
-
-/trending/movie/week
-
-Menampilkan film trending minggu ini
-
-Genre
-
-/genre/movie/list
-
-Mengambil daftar genre
-
-Filter Genre
-
-/discover/movie?with_genres={id}
-
-Menampilkan film berdasarkan genre
-
-Pencarian
-
-/search/movie?query={query}
-
-Mencari film berdasarkan judul
-
-Detail Film
-
-/movie/{id}
-
-Informasi detail film
-
-Cast
-
-/movie/{id}/credits
-
-Menampilkan pemeran
-
-Review
-
-/movie/{id}/reviews
-
-Menampilkan ulasan pengguna
-
-Trailer
-
-/movie/{id}/videos
-
-Trailer film (YouTube)
-
-Rilis
-
-/movie/{id}/release_dates
-
-Informasi tanggal rilis
+| Kategori | Endpoint Relatif | Fungsi |
+| :--- | :--- | :--- |
+| Populer | /discover/movie?sort_by=popularity.desc | Menampilkan film populer. |
+| Trending | /trending/movie/week | Menampilkan film trending minggu ini. |
+| Genre | /genre/movie/list | Mengambil daftar genre. |
+| Filter Genre | /discover/movie?with_genres={id} | Menampilkan film berdasarkan genre. |
+| Pencarian | /search/movie?query={query} | Mencari film berdasarkan judul. |
+| Detail Film | /movie/{id} | Informasi detail film. |
+| Cast | /movie/{id}/credits | Menampilkan pemeran. |
+| Review | /movie/{id}/reviews | Menampilkan ulasan pengguna. |
+| Trailer | /movie/{id}/videos | Trailer film (YouTube). |
+| Rilis | /movie/{id}/release_dates | Informasi tanggal rilis. |
 
 Semua request dilakukan menggunakan Dio dan hasil JSON dipetakan ke model Dart melalui factory constructor.
 
-3. Cara Instalasi
+---
 
-Ikuti langkah berikut untuk menjalankan project:
+## 🛠️ Getting Started
 
-3.1 Clone Repository
+Ikuti langkah-langkah berikut untuk menjalankan proyek:
 
-git clone <url-repo>
+### 1. Clone Repository
+git clone <url-repo-anda>
 cd movie_explorer
 
-3.2 Install Dependency Flutter
-
+### 2. Install Dependency Flutter
 flutter pub get
 
-3.3 Tambahkan API Key TMDb
+### 3. Tambahkan API Key TMDb
+Letakkan kunci API TMDb Anda di file service (misalnya api_service.dart) atau gunakan .env jika disiapkan.
 
-Letakkan di file service (api_service.dart) atau gunakan .env jika disiapkan.
-
-3.4 Jalankan Aplikasi
-
+### 4. Jalankan Aplikasi
 flutter run
 
-3.5 Syarat Tambahan
+### ⚠️ Syarat Tambahan
+* Pastikan koneksi internet aktif.
+* Gunakan Flutter versi terbaru agar kompatibel.
 
-Pastikan koneksi internet aktif
+---
 
-Gunakan Flutter versi terbaru agar kompatibel
+## 📂 Project Structure
 
-4. Struktur Folder (Ringkas)
+Struktur proyek ditampilkan dalam format yang sesuai standar:
 
 lib/
  ├─ models/
@@ -132,35 +82,38 @@ lib/
  └─ widgets/
      └─ movie_card.dart
 
-5. Teknologi yang Digunakan
+---
 
-Flutter
+## 💻 Technologies Used
 
-Dart
+* Flutter
+* Dart
+* Dio (HTTP client)
+* TMDb API
+* Shared Preferences (penyimpanan favorit)
 
-Dio (HTTP client)
+---
 
-TMDb API
+## 📸 Screenshots
 
-Shared Preferences (penyimpanan favorit)
+Tambahkan screenshot ke folder screenshots/ di repository Anda untuk mendokumentasikan hasil implementasi:
 
-6. Screenshot Aplikasi
+* Tampilan Dashboard
+* <img width="394" height="834" alt="Screenshot 2025-12-11 181038" src="https://github.com/user-attachments/assets/1d18f050-be86-4daf-9589-69580f4c9340" />
+* Halaman Semua Film + Pencarian
+* <img width="394" height="834" alt="Screenshot 2025-12-11 181123" src="https://github.com/user-attachments/assets/d9b8f3df-a7eb-451d-aca6-595a2517adf3" />
+<img width="394" height="834" alt="Screenshot 2025-12-11 181141" src="https://github.com/user-attachments/assets/9386d8e5-1ea6-4951-9f2c-d283fe74523d" />
+* Detail Film
+* <img width="394" height="834" alt="Screenshot 2025-12-11 181240" src="https://github.com/user-attachments/assets/0783dca6-1158-43eb-bb82-e547b4d601de" />
+<img width="394" height="834" alt="Screenshot 2025-12-11 181255" src="https://github.com/user-attachments/assets/7eb032ec-4ff2-4eb4-938e-c65ccdfd72dc" />
+* Halaman Favorit
+<img width="394" height="834" alt="Screenshot 2025-12-11 181450" src="https://github.com/user-attachments/assets/b598c24c-2c7f-48ed-a1ba-0ebf69473b75" />
+* Contoh Loading State
+* <img width="373" height="789" alt="Screenshot 2025-12-11 112338" src="https://github.com/user-attachments/assets/184a70e9-b8dc-49c3-a1d2-51a142308eed" />
+* Contoh Error State
+<img width="373" height="789" alt="Screenshot 2025-12-11 113821" src="https://github.com/user-attachments/assets/ca62a17f-ed3f-483b-8705-4774ffb109ef" />
+---
 
-Tambahkan beberapa gambar untuk menunjukkan hasil implementasi:
+## 📜 License
 
-Tampilan Dashboard
-
-Halaman Semua Film + Pencarian
-
-Detail Film (overview, cast, review, trailer)
-
-Halaman Favorit
-
-Contoh Loading State
-
-Contoh Error State
-
-7. Lisensi
-
-Project ini dibuat untuk keperluan tugas/ujian dan tidak digunakan untuk tujuan komersial.
-
+Project ini dibuat untuk keperluan tugas/ujian mata kuliah Pemrograman Mobile dan tidak digunakan untuk tujuan komersial.
