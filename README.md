@@ -1,4 +1,4 @@
-<img width="373" height="789" alt="Screenshot 2025-12-11 113821" src="https://github.com/user-attachments/assets/473c9318-e44e-47bb-8c0d-8f84b9f0137d" /># 🎬 Movie Explorer
+# 🎬 Movie Explorer
 
 A Flutter application that fetches real-time movie data from The Movie Database (TMDb) API. This project was developed as part of a mobile programming final project and demonstrates API integration, JSON parsing, simple state management, and asynchronous UI handling.
 
